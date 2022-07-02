@@ -17,16 +17,30 @@ timeout = 5
 def testCon():
     try:
         request = requests.get(url, timeout=timeout)
-        print("Connected to the Internet")
+        print("...")
     except (requests.ConnectionError, requests.Timeout) as exception:
         return False
 
 def handler(signum, frame):
-    print("Forever is over")
+    print("...")
     raise Exception("End of time")
+
+
+def set_keepalive_linux(sock, after_idle_sec=1, interval_sec=3, max_fails=1):
+    """Set TCP keepalive on an open socket.
+
+    It activates after 1 second (after_idle_sec) of idleness,
+    then sends a keepalive ping once every 3 seconds (interval_sec),
+    and closes the connection after 5 failed ping (max_fails), or 15 seconds
+    """
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+    sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, after_idle_sec)
+    sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, interval_sec)
+    sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, max_fails)
 
 #s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 #s.connect((HOST, PORT))
+#set_keepalive_linux(s,after_idle_sec=1, interval_sec=3, max_fails=1)
 connected = True
 #print('Connected to main server IP: ', HOST)
 
@@ -63,36 +77,30 @@ def read(s):
     s.sendall(f_data)
 
 def main():
+    #global s
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((HOST, PORT))
+    set_keepalive_linux(s,after_idle_sec=1, interval_sec=3, max_fails=1)
     print('Connected to main server IP: ', HOST)
     data = 'ID: 0x0001'
     e_data = data.encode('utf-8')
     s.sendall(e_data)
     while True:
-        try:
-            while True:
-                try:
-                    signal.signal(signal.SIGALRM,handler)
-                    signal.alarm(30)
-                    x_data = s.recv(1024).decode('utf-8')
-                    signal.alarm(0)
-                    break
-                except:
-                    if testCon() == False:
-                        raise Exception("QANTO")
+        try:      
+            x_data = s.recv(1024).decode('utf-8')    
             if x_data == 'detect':
                 camera(s)
             elif x_data == 'read':
                 read(s)
         except:
-            print( "connection lost... reconnecting" )
+            print("connection lost... reconnecting")
             connected = False
             time.sleep(5)
             while not connected:
                 try:
                     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     s.connect((HOST, PORT))
+                    set_keepalive_linux(s,after_idle_sec=1, interval_sec=3, max_fails=1)
                     print('Connected to main server IP: ', HOST)
                     data = 'ID: 0x0001'
                     e_data = data.encode('utf-8')
