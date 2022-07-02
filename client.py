@@ -26,7 +26,7 @@ def handler(signum, frame):
     raise Exception("End of time")
 
 
-def set_keepalive_linux(sock, after_idle_sec=1, interval_sec=3, max_fails=1):
+def set_keepalive_linux(sock, after_idle_sec=1, interval_sec=3, max_fails=3):
     """Set TCP keepalive on an open socket.
 
     It activates after 1 second (after_idle_sec) of idleness,
