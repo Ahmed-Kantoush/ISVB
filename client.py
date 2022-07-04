@@ -1,14 +1,19 @@
+#!/user/bin/python
+
 from re import X
 import socket
 import struct
 import pickle
 import cv2
 import time
-import pytesseract
+#import pytesseract
 import signal
 import requests
 
-HOST = '197.160.2.29'
+time.sleep(20)
+
+HOST = '35.234.80.164'
+#HOST = '197.166.122.19'
 PORT = 3000
 
 url = "http://www.google.com"
@@ -46,7 +51,7 @@ connected = True
 
 
 def camera(s):
-    print("Capturing...")
+    print("Capturing...", flush=True)
     vid = cv2.VideoCapture(-1)
     img, frame = vid.read()
     x = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
@@ -59,7 +64,7 @@ def read(s):
     vid = cv2.VideoCapture(-1)
     img, frame = vid.read()
     x = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    data4= pytesseract.image_to_data(x)
+    data4 = 'x'
     filewrite = open("string.txt", "w")
     for z, a in enumerate(data4.splitlines()):
         if z != 0:
@@ -81,7 +86,7 @@ def main():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((HOST, PORT))
     set_keepalive_linux(s,after_idle_sec=1, interval_sec=3, max_fails=1)
-    print('Connected to main server IP: ', HOST)
+    print('Connected to main server IP: ', HOST, flush=True)
     data = 'ID: 0x0001'
     e_data = data.encode('utf-8')
     s.sendall(e_data)
@@ -93,7 +98,7 @@ def main():
             elif x_data == 'read':
                 read(s)
         except:
-            print("connection lost... reconnecting")
+            print("connection lost... reconnecting", flush=True)
             connected = False
             time.sleep(5)
             while not connected:
@@ -101,15 +106,16 @@ def main():
                     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     s.connect((HOST, PORT))
                     set_keepalive_linux(s,after_idle_sec=1, interval_sec=3, max_fails=1)
-                    print('Connected to main server IP: ', HOST)
+                    print('Connected to main server IP: ', HOST, flush=True)
                     data = 'ID: 0x0001'
                     e_data = data.encode('utf-8')
                     s.sendall(e_data)
-                    print("re-connection successful")
+                    print("re-connection successful", flush=True)
                     connected = True
                 except socket.error:
                     time.sleep(5)
 
 if __name__ == "__main__":
-	while 1:
-		main()
+    print("NEBLA STARTING", flush=True)
+    while 1:
+        main()
